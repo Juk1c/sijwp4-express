@@ -1,0 +1,20 @@
+<div class="flex flex-col gap-2 text-2xl p-2">
+    <div class="pb-2 flex flex-col">
+        <label>Ime i prezime</label>
+        <input type="text" name="name" value={{user.name}} class="bg-success-content" />
+    </div>
+
+    <div class="pb-2 flex flex-col">
+        <label>E-mail adresa</label>
+        <input type="email" name="email" value={{user.email}} class="bg-success-content"/>
+    </div>
+
+    <div class="pb-2 flex flex-col">
+        <label>Zaporka</label>
+        <input type="password" name="password" class="bg-success-content" />
+    </div>
+    <div class="pb-2 flex gap-2">
+        <input type="submit" value="Potvrdi" class="flex-1 btn btn-primary" />
+        <input type="reset" value="Poništi" class="flex-1 btn btn-warning" />
+    </div>
+</div>
