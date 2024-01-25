@@ -4,7 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const { engine } = require("express-handlebars");
-const {parseAuthCookie} = require("./services/auth");
+const { parseAuthCookie } = require("./services/auth");
 
 // ROUTERS IMPORT
 const indexRouter = require('./routes/index');
@@ -43,9 +43,11 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-if(err.status === 404) {
-  res.locals.message = "Tražena stranica ne postoji";
-}
+  //console.log("GREKA", err);
+
+  if (err.status === 404) {
+    res.locals.message = "Tražena stranica ne postoji";
+  }
 
   // render the error page
   res.status(err.status || 500);
