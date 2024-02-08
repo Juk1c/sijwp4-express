@@ -5,12 +5,10 @@ const { db } = require("../services/db.js");
 const { getUserJwt, checkEmailUnique, authRequired } = require("../services/auth.js");
 const bcrypt = require("bcrypt");
 
-
 // GET /users/data
 router.get("/data", authRequired, function (req, res, next) {
   res.render("users/data", { result: { display_form: true } });
 });
-
 
 const schema_data = Joi.object({
   name: Joi.string().min(3).max(50).required(),
@@ -18,13 +16,10 @@ const schema_data = Joi.object({
   password: Joi.string().min(3).max(50).allow(null, "")
 });
 
-
 // POST /users/data
 router.post("/data", authRequired, function (req, res, next) {
-  res.render("users/data");
-
   // do validation
-  const result = schema_signin.validate(req.body);
+  const result = schema_data.validate(req.body);
   if (result.error) {
     res.render("users/data", { result: { validation_error: true, display_form: true } });
     return;
@@ -37,8 +32,8 @@ router.post("/data", authRequired, function (req, res, next) {
 
   let dataChanged = [];
 
-  let emailChange = false;
-  if (newName !== currentUser.email) {
+  let emailChanged = false;
+  if (newEmail !== currentUser.email) {
     if (!checkEmailUnique(newEmail)) {
       res.render("users/data", { result: { email_in_use: true, display_form: true } });
       return;
@@ -55,7 +50,7 @@ router.post("/data", authRequired, function (req, res, next) {
 
   let passwordChanged = false;
   let passwordHash;
-  if (newPassword && newPassword.lenght > 0) {
+  if (newPassword && newPassword.length > 0) {
     passwordHash = bcrypt.hashSync(newPassword, 10);
     passwordChanged = true;
     dataChanged.push(passwordHash);
@@ -66,29 +61,22 @@ router.post("/data", authRequired, function (req, res, next) {
     return;
   }
 
-let query = "UPDATE users SET";
-if (emailChanged) query += " email = ?,";
-if (nameChanged) query += " name = ?,";
-if (passwordChanged) query += " password = ?,";
-query = query.slice(0, -1);
-query += " WHERE email = ?;";
-dataChanged.push(currentUser.email);
+  let query = "UPDATE users SET";
+  if (emailChanged) query += " email = ?,";
+  if (nameChanged) query += " name = ?,";
+  if (passwordChanged) query += " password = ?,";
+  query = query.slice(0, -1);
+  query += " WHERE email = ?;";
+  dataChanged.push(currentUser.email);
 
-const stmt = db.prepare(query);
-const updateResult = stmt.run(dataChanged);
+  const stmt = db.prepare(query);
+  const updateResult = stmt.run(dataChanged);
 
-
-if(updateResult.changes && updateResult.changes === 1) {
-  res.render("users/data", {result: { success: true}});
-} else {
-  res.render("users/data", {result: { database_error: true}});
-}
-});
-
-
-// GET /users/signin
-router.get("/signin", function (req, res, next) {
-  res.render("users/signin", { result: { display_form: true } });
+  if (updateResult.changes && updateResult.changes === 1) {
+    res.render("users/data", { result: { success: true } });
+  } else {
+    res.render("users/data", { result: { database_error: true } });
+  }
 });
 
 // GET /users/signout
@@ -97,6 +85,10 @@ router.get("/signout", authRequired, function (req, res, next) {
   res.redirect("/");
 });
 
+// GET /users/signin
+router.get("/signin", function (req, res, next) {
+  res.render("users/signin", { result: { display_form: true } });
+});
 
 // SCHEMA signin
 const schema_signin = Joi.object({
@@ -159,15 +151,14 @@ router.post("/signup", function (req, res, next) {
     return;
   }
 
-
-  if (checkEmailUnique(req.body.email)) {
+  if (!checkEmailUnique(req.body.email)) {
     res.render("users/signup", { result: { email_in_use: true, display_form: true } });
     return;
   }
 
   const passwordHash = bcrypt.hashSync(req.body.password, 10);
   const stmt2 = db.prepare("INSERT INTO users (email, password, name, signed_at, role) VALUES (?, ?, ?, ?, ?);");
-  const insertResult = stmt2.run(req.body.email, passwordHash, req.body.name, Date.now(), "user");
+  const insertResult = stmt2.run(req.body.email, passwordHash, req.body.name, new Date().toISOString(), "user");
 
   if (insertResult.changes && insertResult.changes === 1) {
     res.render("users/signup", { result: { success: true } });
